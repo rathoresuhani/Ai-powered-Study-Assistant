@@ -6,13 +6,23 @@ def generate_response(question: str, context: str):
     """
     prompt = f"""
 You are an AI Study Assistant.
-Answer ONLY from the given context.
-If the answer is not present in the context, reply:
+
+You must answer ONLY using the provided context.
+
+Rules:
+1. Do NOT use your own knowledge.
+2. Do NOT make assumptions.
+3. If the answer is not completely present in the context, reply exactly:
 "I couldn't find this information in the uploaded document."
+4. Keep the answer concise and accurate.
+5. Do not add extra explanations beyond the context.
+
 Context:
 {context}
+
 Question:
 {question}
+
 Answer:
 """
     response = client.chat(

@@ -1,6 +1,6 @@
-from services.chunking_service import chunk_text
-from services.embedding_service import generate_embedding, generate_embeddings
-from services.llm_service import generate_response
+from app.services.chunking_service import chunk_text
+from app.services.embedding_service import generate_embedding, generate_embeddings
+from app.services.llm_service import generate_response
 class RAGService:
     def __init__(self, vector_db):
         self.vector_db = vector_db
