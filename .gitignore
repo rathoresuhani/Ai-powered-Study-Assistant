@@ -29,3 +29,30 @@ frontend/dist/
 # =========================
 .DS_Store
 Thumbs.db
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+venv/
+.venv/
+
+# Environment variables
+.env
+
+# Uploaded/generated files
+uploads/
+
+# Qdrant local database
+../docker/qdrant_storage/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+# Qdrant local database
+docker/qdrant_storage/

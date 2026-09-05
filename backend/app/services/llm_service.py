@@ -289,39 +289,24 @@ You are an AI Study Assistant.
 Create EXACTLY 5 multiple-choice questions using ONLY
 the information provided in the PDF content below.
 
-IMPORTANT RULES:
+RULES:
 
 1. Use ONLY information present in the PDF.
 2. Do NOT use outside knowledge.
-3. Do NOT invent facts, concepts, terminology, or examples.
-4. Create EXACTLY 5 questions.
-5. Each question MUST have exactly 4 options.
-6. All 4 options MUST be different.
-7. Only ONE option must be correct.
-8. The incorrect options must be plausible and related to the PDF topic.
-9. Do NOT repeat questions.
-10. Cover different important concepts from the PDF.
-11. The correct_answer MUST contain the EXACT TEXT of the correct option.
-12. NEVER use "Option 1", "Option 2", "Option 3", or "Option 4"
-    as the correct_answer.
-13. Every question MUST contain an explanation.
-14. Every question MUST contain an integer id.
-15. The explanation must be based ONLY on the PDF.
-16. Return ONLY valid JSON.
-17. Do NOT use markdown code fences.
-18. Do NOT add any text before or after the JSON.
+3. Create EXACTLY 5 different questions.
+4. Each question must have exactly 4 options.
+5. All 4 options must be different.
+6. Only ONE option must be correct.
+7. Incorrect options must be plausible.
+8. Cover different concepts from the PDF.
+9. Every question must have an integer id.
+10. Every question must have an explanation.
+11. The correct_answer must be the EXACT TEXT of the correct option.
+12. Return ONLY valid JSON.
+13. Do NOT use markdown.
+14. Do NOT add any text before or after the JSON.
 
-Before returning the JSON, check:
-
-- Exactly 5 questions.
-- Exactly 4 options per question.
-- All options are different.
-- correct_answer exactly matches one option.
-- Every question has an explanation.
-- Every question has a numeric id.
-- No duplicate questions.
-
-The JSON MUST have exactly this structure:
+The JSON MUST follow this structure:
 
 {{
     "questions": [
@@ -348,6 +333,10 @@ PDF CONTENT:
 JSON:
 """
 
+    # --------------------------------------------------------
+    # CALL PHI-3
+    # --------------------------------------------------------
+
     response = client.chat(
         model="phi3",
         messages=[
@@ -360,38 +349,21 @@ JSON:
 
     content = response["message"]["content"].strip()
 
-    print("\n========== PRACTICE TEST RAW RESPONSE ==========")
-    print(content)
-    print("=================================================\n")
-
     # --------------------------------------------------------
-    # JSON PARSING
+    # PARSE JSON
     # --------------------------------------------------------
 
     try:
         data = json.loads(content)
 
     except json.JSONDecodeError:
-
-        print(
-            "Practice test JSON parsing failed."
-        )
-
+        print("Practice test: JSON parsing failed.")
         return {
             "questions": []
         }
 
     # --------------------------------------------------------
-    # IMPORTANT:
-    # Phi-3 may return either:
-    #
-    # {
-    #     "questions": [...]
-    # }
-    #
-    # OR:
-    #
-    # [...]
+    # GET QUESTIONS
     # --------------------------------------------------------
 
     if isinstance(data, list):
@@ -407,26 +379,37 @@ JSON:
 
     else:
 
+        print("Practice test: invalid JSON structure.")
+
         return {
             "questions": []
         }
 
     if not isinstance(questions, list):
 
+        print("Practice test: questions is not a list.")
+
         return {
             "questions": []
         }
 
-    valid_questions = []
-    seen_questions = set()
+    print(
+        f"Practice test: model returned "
+        f"{len(questions)} questions."
+    )
 
     # --------------------------------------------------------
-    # VALIDATE EACH QUESTION
+    # VALIDATE QUESTIONS
     # --------------------------------------------------------
+
+    valid_questions = []
+    seen_questions = set()
 
     for question in questions:
 
         if not isinstance(question, dict):
+
+            print("Skipped: question is not an object.")
             continue
 
         question_text = question.get(
@@ -446,8 +429,7 @@ JSON:
         )
 
         # ----------------------------------------------------
-        # Handle Phi-3 typo:
-        # "explanately"
+        # Explanation typo handling
         # ----------------------------------------------------
 
         if not explanation:
@@ -458,23 +440,45 @@ JSON:
             )
 
         # ----------------------------------------------------
-        # Basic validation
+        # Question text
         # ----------------------------------------------------
 
         if not question_text:
+
+            print("Skipped: missing question text.")
             continue
 
+        # ----------------------------------------------------
+        # Options
+        # ----------------------------------------------------
+
         if not isinstance(options, list):
+
+            print(
+                "Skipped: options is not a list."
+            )
+
             continue
 
         if len(options) != 4:
+
             print(
-                "Skipping question: "
-                "not exactly 4 options."
+                "Skipped: question does not have "
+                "exactly 4 options."
             )
+
             continue
 
+        # ----------------------------------------------------
+        # Correct answer
+        # ----------------------------------------------------
+
         if not correct_answer:
+
+            print(
+                "Skipped: missing correct answer."
+            )
+
             continue
 
         # ----------------------------------------------------
@@ -486,16 +490,21 @@ JSON:
         for option in options:
 
             if not isinstance(option, str):
+
                 continue
 
             option = option.strip()
 
             if option:
-                cleaned_options.append(
-                    option
-                )
+
+                cleaned_options.append(option)
 
         if len(cleaned_options) != 4:
+
+            print(
+                "Skipped: invalid option values."
+            )
+
             continue
 
         # ----------------------------------------------------
@@ -510,9 +519,7 @@ JSON:
         if len(set(normalized_options)) != 4:
 
             print(
-                f"Skipping question because "
-                f"options are duplicated: "
-                f"{question_text}"
+                "Skipped: duplicate options."
             )
 
             continue
@@ -522,14 +529,15 @@ JSON:
         # ----------------------------------------------------
 
         normalized_question = (
-            question_text.lower().strip()
+            str(question_text)
+            .lower()
+            .strip()
         )
 
         if normalized_question in seen_questions:
 
             print(
-                f"Skipping duplicate question: "
-                f"{question_text}"
+                "Skipped: duplicate question."
             )
 
             continue
@@ -547,58 +555,86 @@ JSON:
         ).strip()
 
         option_lower = (
-            correct_answer.lower()
+            correct_answer.lower().strip()
         )
 
-        # Handle:
-        # Option 1
-        # Option 2
-        # Option 3
-        # Option 4
+        # A / B / C / D
+        letter_mapping = {
+            "a": 0,
+            "b": 1,
+            "c": 2,
+            "d": 3
+        }
 
-        if option_lower.startswith(
+        if option_lower in letter_mapping:
+
+            correct_answer = cleaned_options[
+                letter_mapping[option_lower]
+            ]
+
+        # Option A / Option B / Option C / Option D
+        elif option_lower.startswith(
             "option "
         ):
 
-            try:
+            value = option_lower.replace(
+                "option ",
+                ""
+            ).strip()
 
-                option_number = int(
-                    option_lower
-                    .replace(
-                        "option ",
-                        ""
-                    )
-                    .strip()
-                )
+            # Option A/B/C/D
+            if value in letter_mapping:
 
-                if 1 <= option_number <= 4:
+                correct_answer = cleaned_options[
+                    letter_mapping[value]
+                ]
 
-                    correct_answer = (
-                        cleaned_options[
-                            option_number - 1
-                        ]
-                    )
+            # Option 1/2/3/4
+            else:
 
-            except ValueError:
+                try:
 
-                pass
+                    option_number = int(value)
+
+                    if 1 <= option_number <= 4:
+
+                        correct_answer = (
+                            cleaned_options[
+                                option_number - 1
+                            ]
+                        )
+
+                except ValueError:
+
+                    pass
+
+        # 1 / 2 / 3 / 4
+        elif option_lower in {
+            "1",
+            "2",
+            "3",
+            "4"
+        }:
+
+            correct_answer = cleaned_options[
+                int(option_lower) - 1
+            ]
 
         # ----------------------------------------------------
-        # Correct answer MUST match option
+        # Check correct answer
         # ----------------------------------------------------
 
         if correct_answer not in cleaned_options:
 
             print(
-                "Skipping question: "
-                "correct answer does not "
+                "Skipped: correct answer does not "
                 "match any option."
             )
 
             continue
 
         # ----------------------------------------------------
-        # Clean explanation
+        # Explanation
         # ----------------------------------------------------
 
         if not isinstance(
@@ -611,12 +647,14 @@ JSON:
         explanation = explanation.strip()
 
         # ----------------------------------------------------
-        # Build clean question
+        # Create clean question
         # ----------------------------------------------------
 
         clean_question = {
             "id": len(valid_questions) + 1,
-            "question": question_text.strip(),
+            "question": str(
+                question_text
+            ).strip(),
             "options": cleaned_options,
             "correct_answer": correct_answer,
             "explanation": explanation
@@ -626,8 +664,12 @@ JSON:
             clean_question
         )
 
-        # EXACTLY 5 MAX
+        # ----------------------------------------------------
+        # Stop after 5 valid questions
+        # ----------------------------------------------------
+
         if len(valid_questions) == 5:
+
             break
 
     # --------------------------------------------------------
@@ -635,8 +677,8 @@ JSON:
     # --------------------------------------------------------
 
     print(
-        f"Valid practice questions generated: "
-        f"{len(valid_questions)}"
+        f"Practice test: "
+        f"{len(valid_questions)} valid questions."
     )
 
     return {

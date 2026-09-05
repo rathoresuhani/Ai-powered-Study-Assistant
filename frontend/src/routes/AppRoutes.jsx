@@ -6,6 +6,7 @@ import QuizPage from '@/pages/QuizPage';
 import Dashboard from '@/pages/Dashboard';
 import LandingPage from '@/pages/LandingPage';
 import UploadPage from '@/pages/UploadPage';
+import SummaryPage from '@/pages/SummaryPage';
 
 function AppRoutes(){
   return  (
@@ -17,6 +18,7 @@ function AppRoutes(){
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/flashcards" element={<FlashcardPage />} />
         <Route path="/quiz" element={<QuizPage />} />
+        <Route path="/summary" element={<SummaryPage />} />
       </Routes>
     </BrowserRouter>  
     );

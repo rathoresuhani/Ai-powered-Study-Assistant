@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+
 import {
   SignedIn,
   SignedOut,
@@ -6,44 +7,82 @@ import {
   SignUpButton,
   UserButton,
 } from "@clerk/clerk-react";
+
 function Navbar() {
+  const location = useLocation();
+
+  const navItems = [
+    { name: "Home", path: "/" },
+    { name: "Dashboard", path: "/dashboard" },
+    { name: "Upload", path: "/upload" },
+    { name: "Chat", path: "/chat" },
+    { name: "Flashcards", path: "/flashcards" },
+    { name: "Quiz", path: "/quiz" },
+  ];
+
   return (
-    <nav className="flex justify-between items-center px-8 py-4 border-b">
-      <h1 className="font-bold text-2xl">
-        AI Study Assistant 🚀
-      </h1>
+    <nav className="border-b bg-white">
+      <div className="max-w-7xl mx-auto px-6 py-4">
 
-      {/* Center */}
-      <div className="flex gap-6 font-medium">
-        <Link to="/">Home</Link>
-        <Link to="/dashboard">Dashboard</Link>
-        <Link to="/upload">Upload</Link>
-        <Link to="/chat">Chat</Link>
-        <Link to="/flashcards">Flashcards</Link>
-        <Link to="/quiz">Quiz</Link>
-      </div>
+        <div className="flex items-center justify-between gap-6">
 
-      {/* Right */}
-      <div className="flex items-center gap-3">
-        <SignedOut>
-          <SignInButton mode="modal">
-            <button className="px-4 py-2 border rounded-lg hover:bg-slate-100">
-              Sign In
-            </button>
-          </SignInButton>
+          {/* Logo */}
+          <Link
+            to="/"
+            className="font-semibold text-xl whitespace-nowrap"
+          >
+            AI Study Assistant
+          </Link>
 
-          <SignUpButton mode="modal">
-            <button className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800">
-              Sign Up
-            </button>
-          </SignUpButton>
-        </SignedOut>
+          {/* Navigation */}
+          <div className="hidden lg:flex items-center gap-1">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path;
 
-        <SignedIn>
-          <UserButton afterSignOutUrl="/" />
-        </SignedIn>
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`px-3 py-2 rounded-md text-sm transition ${
+                    isActive
+                      ? "bg-slate-100 text-black font-medium"
+                      : "text-gray-600 hover:text-black hover:bg-slate-50"
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Authentication */}
+          <div className="flex items-center gap-2">
+
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="px-3 py-2 text-sm border rounded-md hover:bg-slate-50 transition">
+                  Sign In
+                </button>
+              </SignInButton>
+
+              <SignUpButton mode="modal">
+                <button className="px-3 py-2 text-sm bg-black text-white rounded-md hover:bg-gray-800 transition">
+                  Sign Up
+                </button>
+              </SignUpButton>
+            </SignedOut>
+
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
+
+          </div>
+
+        </div>
+
       </div>
     </nav>
   );
 }
+
 export default Navbar;
