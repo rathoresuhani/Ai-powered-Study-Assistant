@@ -1,5 +1,5 @@
 import axios from "axios";
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = import.meta.env.VITE_API_URL;
 export const sendMessage = async(message, clerkId) => {
   const response = await axios.post(`${API_URL}/chat`, {
     message,
